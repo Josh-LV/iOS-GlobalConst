@@ -424,6 +424,38 @@ UIImage *generateBarCode(NSString *code,CGFloat width,CGFloat height)
     
     return [UIImage imageWithCIImage:transformedImage];
 }
+UIImage * imageWithMaxSide(CGFloat length ,UIImage *image){
+    CGFloat scale = [[UIScreen mainScreen] scale];
+    CGSize imgSize = SizeReduce(image.size, length);
+    UIImage *img = nil;
+    
+    UIGraphicsBeginImageContextWithOptions(imgSize, YES, scale);  // 创建一个 bitmap context
+    
+    [image drawInRect:CGRectMake(0, 0, imgSize.width, imgSize.height)
+            blendMode:kCGBlendModeNormal alpha:1.0];              // 将图片绘制到当前的 context 上
+    
+    img = UIGraphicsGetImageFromCurrentImageContext();            // 从当前 context 中获取刚绘制的图片
+    UIGraphicsEndImageContext();
+    
+    return img;
+}
+CGSize SizeReduce(CGSize size, CGFloat limit){   // 按比例减少尺寸
+    CGFloat max = MAX(size.width, size.height);
+    if (max < limit) {
+        return size;
+    }
+    
+    CGSize imgSize;
+    CGFloat ratio = size.height / size.width;
+    
+    if (size.width > size.height) {
+        imgSize = CGSizeMake(limit, limit*ratio);
+    } else {
+        imgSize = CGSizeMake(limit/ratio, limit);
+    }
+    
+    return imgSize;
+}
 #pragma mark -- MD5加密
 /**
  *  MD5加密
@@ -444,4 +476,71 @@ NSString * MD5(NSString *string)
             result[8], result[9], result[10], result[11],
             result[12], result[13], result[14], result[15]
             ];
+}
+
+/**
+ * 根据两地经纬度，计算两地距离
+ */
+CGFloat getDistance(CGFloat localLatitude,CGFloat localLongitude,CGFloat otherLatitude,CGFloat otherLongitude){
+    if (localLatitude == 0 || localLongitude == 0 || otherLatitude == 0 || otherLongitude== 0) {
+        return 0;
+    }
+    CLLocation * originLocation = [[CLLocation alloc] initWithLatitude:localLatitude longitude:localLongitude];
+    CLLocation *desLocation = [[CLLocation alloc] initWithLatitude:otherLatitude longitude:otherLongitude];
+    
+    CGFloat distance = [originLocation distanceFromLocation:desLocation]/1000 ;
+    return distance;
+}
+#pragma mark -- 颜色转换
+/**
+ * 颜色转换
+ */
+UIColor * colorWithRed(CGFloat red ,CGFloat green ,CGFloat blue ,CGFloat alpha)
+{
+    return [UIColor colorWithRed:red/255.0 green:green/255.0 blue:blue/255.0 alpha:alpha];
+}
+UIColor * colorWithHexString(NSString *color ,CGFloat alpha)
+{
+    //删除字符串中的空格
+    NSString *cString = [[color stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
+    // String should be 6 or 8 characters
+    if ([cString length] < 6)
+    {
+        return [UIColor clearColor];
+    }
+    // strip 0X if it appears
+    //如果是0x开头的，那么截取字符串，字符串从索引为2的位置开始，一直到末尾
+    if ([cString hasPrefix:@"0X"])
+    {
+        cString = [cString substringFromIndex:2];
+    }
+    //如果是#开头的，那么截取字符串，字符串从索引为1的位置开始，一直到末尾
+    if ([cString hasPrefix:@"#"])
+    {
+        cString = [cString substringFromIndex:1];
+    }
+    if ([cString length] != 6)
+    {
+        return [UIColor clearColor];
+    }
+    
+    // Separate into r, g, b substrings
+    NSRange range;
+    range.location = 0;
+    range.length = 2;
+    //r
+    NSString *rString = [cString substringWithRange:range];
+    //g
+    range.location = 2;
+    NSString *gString = [cString substringWithRange:range];
+    //b
+    range.location = 4;
+    NSString *bString = [cString substringWithRange:range];
+    
+    // Scan values
+    unsigned int r, g, b;
+    [[NSScanner scannerWithString:rString] scanHexInt:&r];
+    [[NSScanner scannerWithString:gString] scanHexInt:&g];
+    [[NSScanner scannerWithString:bString] scanHexInt:&b];
+    return [UIColor colorWithRed:((float)r / 255.0f) green:((float)g / 255.0f) blue:((float)b / 255.0f) alpha:alpha];
 }

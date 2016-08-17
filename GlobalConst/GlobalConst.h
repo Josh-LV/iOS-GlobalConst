@@ -177,6 +177,7 @@ CGFloat aLineHeightWithStringAttribute(NSDictionary *attribute);
  *  @return 返回经过128编码后的条形码
  */
 UIImage *generateBarCode(NSString *code,CGFloat width,CGFloat height);
+UIImage * imageWithMaxSide(CGFloat length ,UIImage *image);
 /**
  *  MD5加密
  *
@@ -185,3 +186,7 @@ UIImage *generateBarCode(NSString *code,CGFloat width,CGFloat height);
  *  @return 加密后的字符串
  */
 NSString * MD5(NSString *string);
+CGFloat getDistance(CGFloat localLatitude,CGFloat localLongitude,CGFloat otherLatitude,CGFloat otherLongitude);
+#pragma mark -- 颜色转换
+UIColor * colorWithRed(CGFloat red ,CGFloat green ,CGFloat blue ,CGFloat alpha);
+UIColor * colorWithHexString(NSString *color ,CGFloat alpha);
