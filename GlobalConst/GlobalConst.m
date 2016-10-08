@@ -544,3 +544,179 @@ UIColor * colorWithHexString(NSString *color ,CGFloat alpha)
     [[NSScanner scannerWithString:bString] scanHexInt:&b];
     return [UIColor colorWithRed:((float)r / 255.0f) green:((float)g / 255.0f) blue:((float)b / 255.0f) alpha:alpha];
 }
+
+BOOL checkIDCard(NSString *sPaperId) {
+    //判断位数
+    if (sPaperId.length != 15 && sPaperId.length != 18) {
+        return NO;
+    }
+    NSString *carid = sPaperId;
+    long lSumQT = 0 ;
+    //加权因子
+    int R[] = {7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2};
+    //校验码
+    unsigned char sChecker[11] = {'1','0','X','9','8','7','6','5','4','3','2'};
+    //将15位身份证号转换为18位
+    NSMutableString *mString = [NSMutableString stringWithString:sPaperId];
+    if (sPaperId.length == 15) {
+        [mString insertString:@"19" atIndex:6];
+        long p =0;
+        for (int i =0; i<17; i++)
+        {
+            NSString * s = [mString substringWithRange:NSMakeRange(i, 1)];
+            p += [s intValue] * R[i];
+            
+        }
+        int o = p%11;
+        NSString *string_content = [NSString stringWithFormat:@"%c",sChecker[o]];
+        [mString insertString:string_content atIndex:[mString length]];
+        carid = mString;
+    }
+    //判断地区码
+    NSString *sProvince = [carid substringToIndex:2];
+    NSInteger provinceNum = sProvince.integerValue;
+    
+    if (!isAreaCode:[NSNumber numberWithInteger:provinceNum]) {
+        [MBProgressHUD showError:@"证件号开头不正确"];
+        return NO ;
+    }
+    //判断年月日是否有效
+    //年份
+    int strYear = [getStringWithRange(carid,Value1:6,Value2:4) intValue];
+    //月份
+    int strMonth = [getStringWithRange(carid,Value1:10,Value2:2) intValue];
+    //日
+    int strDay = [getStringWithRange(carid,Value1:12,Value2:2) intValue];
+    NSTimeZone *localZone = [NSTimeZone localTimeZone];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+    [dateFormatter setTimeZone:localZone];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSDate *date = [dateFormatter dateFromString:[NSString stringWithFormat:@"%d-%d-%d 12:01:01",strYear,strMonth,strDay]];
+    if (date == nil) {
+        [MBProgressHUD showError:@"出生日期不正确"];
+        return NO;
+    }
+    
+    const char *PaperId = [carid UTF8String];
+    //检验长度
+    if (18!=strlen(PaperId)) {
+        [MBProgressHUD showError:@"请输入正确的证件号"];
+        return NO;
+    }
+    //校验数字
+    NSString * lst = [carid substringFromIndex:carid.length-1];
+    char di = [carid characterAtIndex:carid.length-1];
+    
+    if (!isdigit(di)) {
+        if ([lst isEqualToString:@"X"]) {
+        }else{
+            [MBProgressHUD showError:@"请输入正确的证件号"];
+            return NO;
+        }
+    }
+    //验证最末的校验码
+    lSumQT = 0;
+    for (int i = 0; i<17; i++){
+        NSString * s = [carid substringWithRange:NSMakeRange(i, 1)];
+        NSLog(@"%d",[s intValue]);
+        lSumQT += [s intValue] * R[i];
+    }
+    if (sChecker[lSumQT%11] != PaperId[17]) {
+        [MBProgressHUD showError:@"请输入正确的证件号"];
+        return NO;
+    }
+    return YES;
+}
+BOOL isAreaCode(NSNumber *province) {
+    //在provinceArr中找
+    NSDictionary * dict = provinceDict();
+    NSArray *arr = [dict allKeys];
+    int a = 0;
+    for (NSNumber * pr in arr) {
+        if ([pr isEqualToNumber:province]) {
+            a ++;
+        }
+    }
+    if (a == 0) {
+        return NO;
+    } else {
+        return YES;
+    }
+}
+NSDictionary * provinceDict() {
+    NSDictionary *pDict = @{
+                            
+                            @11:@"北京市",//|110000，
+                            
+                            @12:@"天津市",//|120000，
+                            
+                            @13:@"河北省",//|130000，
+                            
+                            @14:@"山西省",//|140000，
+                            
+                            @15:@"内蒙古自治区",//|150000，
+                            
+                            @21:@"辽宁省",//|210000，
+                            
+                            @22:@"吉林省",//|220000，
+                            
+                            @23:@"黑龙江省",//|230000，
+                            
+                            @31:@"上海市",//|310000，
+                            
+                            @32:@"江苏省",//|320000，
+                            
+                            @33:@"浙江省",//|330000，
+                            
+                            @34:@"安徽省",//|340000，
+                            
+                            @35:@"福建省",//|350000，
+                            
+                            @36:@"江西省",//|360000，
+                            
+                            @37:@"山东省",//|370000，
+                            
+                            @41:@"河南省",//|410000，
+                            
+                            @42:@"湖北省",//|420000，
+                            
+                            @43:@"湖南省",//430000，
+                            
+                            @44:@"广东省",//440000，
+                            
+                            @45:@"广西壮族自治区",//450000，
+                            
+                            @46:@"海南省",//460000，
+                            
+                            @50:@"重庆市",//500000，
+                            
+                            @51:@"四川省",//510000，
+                            
+                            @52:@"贵州省",//520000，
+                            
+                            @53:@"云南省",//530000，
+                            
+                            @54:@"西藏自治区",//540000，
+                            
+                            @61:@"陕西省",//610000，
+                            
+                            @62:@"甘肃省",//620000，
+                            
+                            @63:@"青海省",//630000，
+                            
+                            @64:@"宁夏回族自治区",//640000，
+                            
+                            @65:@"新疆维吾尔自治区",//650000，
+                            
+                            @71:@"台湾省（886)",//710000,
+                            
+                            @81:@"香港特别行政区（852)",//810000，
+                            
+                            @82:@"澳门特别行政区（853)",//820000
+                            
+                            @91:@"国外"
+                            };
+    return pDict;
+}

@@ -190,3 +190,7 @@ CGFloat getDistance(CGFloat localLatitude,CGFloat localLongitude,CGFloat otherLa
 #pragma mark -- 颜色转换
 UIColor * colorWithRed(CGFloat red ,CGFloat green ,CGFloat blue ,CGFloat alpha);
 UIColor * colorWithHexString(NSString *color ,CGFloat alpha);
+/**
+ *  身份证的严格判断
+ */
+BOOL checkIDCard(NSString *sPaperId);
