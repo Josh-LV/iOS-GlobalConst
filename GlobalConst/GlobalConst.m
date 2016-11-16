@@ -647,7 +647,6 @@ BOOL isAreaCode(NSNumber *province) {
 }
 NSDictionary * provinceDict() {
     NSDictionary *pDict = @{
-                            
                             @11:@"北京市",//|110000，
                             
                             @12:@"天津市",//|120000，
